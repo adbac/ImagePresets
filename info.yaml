@@ -7,7 +7,7 @@ version: '0.1'
 addToMenu:
 - path: presetsWindow.py
   preferredName: Image Presets
-  shortKey: null
+  shortKey: ""
 html: false
 requiresVersionMajor: '4'
 requiresVersionMinor: '0'
