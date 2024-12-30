@@ -7,6 +7,8 @@ A RoboFont extension that provides an interface for creating image presets, and 
 
 ![](imagePresetsWindow.png)
 
+_Placeholder image credit: Boston Public Library via Unsplash_
+
 Installation
 ------------
 
