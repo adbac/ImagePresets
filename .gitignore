@@ -1,0 +1,10 @@
+.DS_Store
+
+__pycache__
+*.pyc
+
+*.afdesign
+*.afdesign~lock~
+
+source/archive/
+future.yaml

@@ -1,0 +1,12 @@
+name: Image Presets
+developer: Adrien Bachelart
+developerURL: https://github.com/adbac
+launchAtStartUp: true
+mainScript: presetsMenus.py
+version: '0.1'
+addToMenu:
+- path: presetsWindow.py
+  preferredName: Image Presets
+html: false
+requiresVersionMajor: '4'
+requiresVersionMinor: '0'
