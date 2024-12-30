@@ -2,8 +2,8 @@ from mojo.extensions import getExtensionDefault, setExtensionDefault
 from mojo.subscriber import Subscriber, registerGlyphEditorSubscriber
 from common import normalizeColor, KEY, BASE_PRESETS
 
-testPresets = getExtensionDefault(KEY, fallback={})
-if not testPresets:
+testPresets = getExtensionDefault(KEY, fallback=None)
+if testPresets is None:
     setExtensionDefault(KEY, BASE_PRESETS)
 
 class ImagePresetsMenuSubscriber(Subscriber):
