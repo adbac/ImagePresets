@@ -80,12 +80,7 @@ class ImagePresetsController(ezui.WindowController):
                 ],
                 columnDescriptions=[dict(
                     identifier="presetName",
-                    # editable=True,
-                    # cellDescription=dict(
-                    #     stringFormatter=self.presetNameFormatter,
-                    # ),
                 )],
-                # allowsEmptySelection=False,
                 allowsEmptySelection=True,
                 allowsMultipleSelection=False,
             ),
@@ -140,7 +135,6 @@ class ImagePresetsController(ezui.WindowController):
             ),
             presetName=dict(
                 continuous=False,
-                stringFormatter=self.presetNameFormatter,
             ),
             imagePreview=dict(
                 width="fit",
@@ -168,22 +162,16 @@ class ImagePresetsController(ezui.WindowController):
             alignment="center",
         )
         self.extensionBundle = ExtensionBundle("ImagePresets")
-        # image = AppKit.NSImage.alloc().initWithContentsOfFile_("placeholder.jpeg")
         image = self.extensionBundle.get("placeholder")
         imWidth, imHeight = image.size()
         scale = 280 / imHeight
         image.setSize_((imWidth * scale, imHeight * scale))
         self.imageLayer.setImage(image)
 
-        # self.presetsListSelectionCallback(self.w.getItem("presetsList"))
+        self.presetsListSelectionCallback(self.w.getItem("presetsList"))
 
     def started(self):
         self.w.open()
-
-    def presetNameFormatter(self, attributes):
-        value = attributes["value"]
-        color = (1, 0, 0, 1) if value in self.presets.keys() and value != self.currentPreset else (0, 0, 0, 1)
-        attributes["fillColor"] = color
 
     def savePresets(self):
         setExtensionDefault("com.adbac.ImagePresets.presets", self.presets)
@@ -191,7 +179,7 @@ class ImagePresetsController(ezui.WindowController):
     def updateFiltersPreview(self, savePresets=True):
         if savePresets:
             self.savePresets()
-        currentPreset = self.presets[self.currentPreset]
+        currentPreset = self.presets[self.currentPreset] if self.currentPreset else self.defaults.copy()
         filters = [
             dict(
                 name="colorControls",
@@ -273,7 +261,7 @@ class ImagePresetsController(ezui.WindowController):
     def forceUpdateUIFields(self):
         if self.currentPreset is None:
             self.setUIFieldsState(False)
-            return
+            self.w.getItem("presetName").set("")
         else:
             for key in self.defaults.keys():
                 self.w.getItem(key).set(self.presets[self.currentPreset][key])
@@ -289,33 +277,37 @@ class ImagePresetsController(ezui.WindowController):
         while name in self.presets:
             name = f"{baseName} {counter}"
             counter += 1
-        item = table.makeItem(
-            presetName=name
-        )
+        item = dict(presetName=name)
         table.appendItems([item])
-        self.presets[name] = self.defaults
+        self.presets[name] = self.defaults.copy()
         table.setSelectedIndexes([len(self.presets.keys()) - 1,])
         self.savePresets()
 
     def presetsListAddRemoveButtonRemoveCallback(self, sender):
         table = self.w.getItem("presetsList")
-        index = table.getSelectedIndexes()[0]
+        selectedIndex = table.getSelectedIndexes()
+        if not selectedIndex:
+            return
+        else:
+            index = selectedIndex[0]
         self.presets.pop(self.currentPreset)
         table.removeSelectedItems()
         if self.presets:
             table.setSelectedIndexes([index,] if index < len(self.presets.keys()) else [index - 1,])
+        else:
+            self.currentPreset = None
         self.savePresets()
+        self.forceUpdateUIFields()
 
     def presetsListSelectionCallback(self, sender):
         if not self.initialized:
             return
         if not sender.getSelectedItems():
             self.currentPreset = None
-            self.forceUpdateUIFields()
         else:
             self.currentPreset = sender.getSelectedItems()[0]["presetName"]
-            self.forceUpdateUIFields()
-            self.updateFiltersPreview(savePresets=False)
+        self.forceUpdateUIFields()
+        self.updateFiltersPreview(savePresets=False)
 
     def presetNameCallback(self, sender):
         newName = sender.get()
