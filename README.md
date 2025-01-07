@@ -12,7 +12,7 @@ _Placeholder image credit: Boston Public Library via Unsplash_
 Installation
 ------------
 
-Download and double-click the `.roboFontExt` file to install manually, or get it via [Mechanic2](http://robofontmechanic.com/).
+Download and double-click the `.roboFontExt` file <!-- to install manually, or get it via [Mechanic2](http://robofontmechanic.com/).-->
 
 When installed, the ImagePresets window becomes available from the _Extensions_ menu.
 
