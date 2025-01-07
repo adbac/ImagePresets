@@ -189,10 +189,10 @@ class ImagePresetsController(ezui.WindowController):
                 contrast=currentPreset["contrast"] / 100,
             ),
             dict(
-                name="unsharpMask",
-                filterType="unsharpMask",
-                radius=10.0,
-                intensity=currentPreset["sharpness"] / 100,
+                name="noiseReduction",
+                filterType="noiseReduction",
+                noiseLevel=0,
+                sharpness=currentPreset["sharpness"] / 100,
             ),
         ] if not self.showOriginal else []
         if currentPreset["enableColor"] and not self.showOriginal:
