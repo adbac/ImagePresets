@@ -3,7 +3,7 @@ developer: Adrien Bachelart
 developerURL: https://github.com/adbac
 launchAtStartUp: true
 mainScript: presetsMenus.py
-version: '0.1.4'
+version: '0.1.5'
 addToMenu:
 - path: presetsWindow.py
   preferredName: Image Presets
