@@ -1,7 +1,7 @@
 import ezui
 import AppKit
 from mojo.extensions import getExtensionDefault, setExtensionDefault, ExtensionBundle
-from common import normalizeColor, KEY, BASE_PRESETS
+from commonResources import normalizeColor, KEY, BASE_PRESETS
 
 class ImagePresetsController(ezui.WindowController):
 

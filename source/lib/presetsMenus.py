@@ -1,6 +1,6 @@
 from mojo.extensions import getExtensionDefault, setExtensionDefault
 from mojo.subscriber import Subscriber, registerGlyphEditorSubscriber
-from common import normalizeColor, KEY, BASE_PRESETS
+from commonResources import normalizeColor, KEY, BASE_PRESETS
 
 testPresets = getExtensionDefault(KEY, fallback=None)
 if testPresets is None:
@@ -42,10 +42,14 @@ class ImagePresetsMenuSubscriber(Subscriber):
         if image is None:
             return
         
+        glyph.prepareUndo("Apply Image Preset")
+
         image.color = normalizeColor((preset["red"], preset["green"], preset["blue"], preset["alpha"])) if preset["enableColor"] else None
         image.brightness = preset["brightness"] / 100
         image.contrast = preset["contrast"] / 100
         image.saturation = preset["saturation"] / 100
         image.sharpness = preset["sharpness"] / 100
+
+        glyph.performUndo()
 
 registerGlyphEditorSubscriber(ImagePresetsMenuSubscriber)
