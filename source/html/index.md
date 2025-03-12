@@ -21,8 +21,8 @@ Available settings
 ------------------
 
 Those available on image right-click in the glyph view:
-- Brightness
-- Saturation
-- Contrast
-- Sharpness
-- Color: red, green, blue, alpha
+* Brightness
+* Saturation
+* Contrast
+* Sharpness
+* Color: red, green, blue, alpha
