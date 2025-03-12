@@ -1,6 +1,7 @@
 libFolder: source/lib
 resourcesFolder: source/resources
 path: ImagePresets.roboFontExt
+htmlFolder: source/html
 license: |
   The MIT License (MIT)
 
