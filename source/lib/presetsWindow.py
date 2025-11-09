@@ -1,25 +1,13 @@
 import ezui
-import AppKit
-from mojo.extensions import getExtensionDefault, setExtensionDefault, ExtensionBundle
-from imagePresetsCommon import normalizeColor, KEY, BASE_PRESETS
+from imagePresetsLib import ImagePreset, ImagePresetsManager, RGBAColor
+from mojo.extensions import ExtensionBundle
+
 
 class ImagePresetsController(ezui.WindowController):
 
     def build(self):
 
-        self.defaults = dict(
-            brightness=0,
-            contrast=100,
-            saturation=100,
-            sharpness=0,
-            enableColor=False,
-            red=0,
-            green=0,
-            blue=0,
-            alpha=100,
-        )
-
-        self.presets = getExtensionDefault(KEY, fallback=BASE_PRESETS)
+        self.filterDefaults = ImagePreset.filterDefaults
 
         content = """
         = HorizontalStack
@@ -36,25 +24,19 @@ class ImagePresetsController(ezui.WindowController):
         >> * TwoColumnForm      @form1
         >>> :
         >>> [ ] Show original   @showOriginal
-        >>> : Brightness:
+        >>> : Brightness
         >>> ---X--- [__]        @brightness
-        >>> : Contrast:
+        >>> : Contrast
         >>> ---X--- [__]        @contrast
-        >>> : Saturation:
+        >>> : Saturation
         >>> ---X--- [__]        @saturation
-        >>> : Sharpness:
+        >>> : Sharpness
         >>> ---X--- [__]        @sharpness
         >> * TwoColumnForm      @form2
         >>> :
-        >>> [ ] Color           @enableColor
-        >>> : Red 🔴
-        >>> ---X--- [__]        @red
-        >>> : Green 🟢
-        >>> ---X--- [__]        @green
-        >>> : Blue 🔵
-        >>> ---X--- [__]        @blue
-        >>> : Alpha 💧
-        >>> ---X--- [__]        @alpha
+        >>> [ ] Use false color @useFalseColor
+        >>> : Color
+        >>> * ColorWell         @color
         """
 
         self.currentPreset = None
@@ -64,19 +46,18 @@ class ImagePresetsController(ezui.WindowController):
         titleColumnWidth = 70
         itemColumnWidth = 130
 
-        colorInputSettings = dict(
-            minValue=0,
-            maxValue=255,
-            value=self.defaults["red"],
-            tickMarks=3,
-            valueType="integer",
+        self.defaultColor = (
+            self.filterDefaults["color"].rgbRange.default,
+            self.filterDefaults["color"].rgbRange.default,
+            self.filterDefaults["color"].rgbRange.default,
+            self.filterDefaults["color"].alphaRange.default,
         )
 
         descriptionData=dict(
             presetsList=dict(
                 width=175,
                 items=[
-                    dict(presetName=name) for name in self.presets.keys()
+                    dict(presetName=p.name) for p in ImagePresetsManager.presets
                 ],
                 columnDescriptions=[dict(
                     identifier="presetName",
@@ -84,51 +65,49 @@ class ImagePresetsController(ezui.WindowController):
                 allowsEmptySelection=True,
                 allowsMultipleSelection=False,
             ),
+            formsHStack=dict(
+                alignment="leading",
+            ),
             form1=dict(
                 titleColumnWidth=titleColumnWidth,
                 itemColumnWidth=itemColumnWidth,
+                height="fit",
             ),
             form2=dict(
                 titleColumnWidth=titleColumnWidth,
                 itemColumnWidth=itemColumnWidth,
+                height="fit",
             ),
             brightness=dict(
-                minValue=-100,
-                maxValue=100,
-                value=self.defaults["brightness"],
+                minValue=self.filterDefaults["brightness"].min,
+                maxValue=self.filterDefaults["brightness"].max,
+                value=self.filterDefaults["brightness"].default,
                 tickMarks=1,
                 valueType="integer",
             ),
             contrast=dict(
-                minValue=25,
-                maxValue=400,
-                value=self.defaults["contrast"],
+                minValue=self.filterDefaults["contrast"].min,
+                maxValue=self.filterDefaults["contrast"].max,
+                value=self.filterDefaults["contrast"].default,
                 tickMarks=1,
                 valueType="integer",
             ),
             saturation=dict(
-                minValue=0,
-                maxValue=200,
-                value=self.defaults["saturation"],
+                minValue=self.filterDefaults["saturation"].min,
+                maxValue=self.filterDefaults["saturation"].max,
+                value=self.filterDefaults["saturation"].default,
                 tickMarks=1,
                 valueType="integer",
             ),
             sharpness=dict(
-                minValue=0,
-                maxValue=200,
-                value=self.defaults["sharpness"],
+                minValue=self.filterDefaults["sharpness"].min,
+                maxValue=self.filterDefaults["sharpness"].max,
+                value=self.filterDefaults["sharpness"].default,
                 tickMarks=1,
                 valueType="integer",
             ),
-            red=colorInputSettings,
-            green=colorInputSettings,
-            blue=colorInputSettings,
-            alpha=dict(
-                minValue=0,
-                maxValue=100,
-                value=self.defaults["alpha"],
-                tickMarks=3,
-                valueType="integer",
+            color=dict(
+                color=self.defaultColor,
             ),
             settingsVStack=dict(
                 spacing=18,
@@ -155,12 +134,15 @@ class ImagePresetsController(ezui.WindowController):
 
         self.initialized = True
 
+        self.w.getItem("color").enable(False)
+
         imagePreview = self.w.getItem("imagePreview")
         merzContainer = imagePreview.getMerzContainer()
         self.imageLayer = merzContainer.appendImageSublayer(
             position=("center", "center"),
             alignment="center",
         )
+
         self.extensionBundle = ExtensionBundle("ImagePresets")
         image = self.extensionBundle.get("placeholder")
         imWidth, imHeight = image.size()
@@ -173,115 +155,93 @@ class ImagePresetsController(ezui.WindowController):
     def started(self):
         self.w.open()
 
-    def savePresets(self):
-        setExtensionDefault("com.adbac.ImagePresets.presets", self.presets)
-
-    def updateFiltersPreview(self, savePresets=True):
-        if savePresets:
-            self.savePresets()
-        currentPreset = self.presets[self.currentPreset] if self.currentPreset else self.defaults.copy()
-        filters = [
-            dict(
-                name="colorControls",
-                filterType="colorControls",
-                saturation=currentPreset["saturation"] / 100,
-                brightness=currentPreset["brightness"] / 100,
-                contrast=currentPreset["contrast"] / 100,
-            ),
-            dict(
-                name="noiseReduction",
-                filterType="noiseReduction",
-                noiseLevel=0,
-                sharpness=currentPreset["sharpness"] / 100,
-            ),
-        ] if not self.showOriginal else []
-        if currentPreset["enableColor"] and not self.showOriginal:
-            filters.append(dict(
-                name="falseColor",
-                filterType="falseColor",
-                color0=normalizeColor((currentPreset["red"], currentPreset["green"], currentPreset["blue"], 100)),
-                color1=(1, 1, 1, 1),
-            ))
-            self.imageLayer.setOpacity(currentPreset["alpha"] / 100)
-        self.imageLayer.setFilters(filters)
+    def updateFiltersPreview(self):
+        currentPreset = (
+            self.currentPreset
+            if self.currentPreset is not None
+            else ImagePreset(name="default")
+        )
+        if self.showOriginal:
+            self.imageLayer.setFilters([])
+            self.imageLayer.setOpacity(1)
+        else:
+            currentPreset.applyToMerzLayer(self.imageLayer, overwriteFilters=True)
 
     def brightnessCallback(self, sender):
-        self.presets[self.currentPreset]["brightness"] = sender.get()
+        self.currentPreset.brightness = sender.get()
         self.updateFiltersPreview()
 
     def contrastCallback(self, sender):
-        self.presets[self.currentPreset]["contrast"] = sender.get()
+        self.currentPreset.contrast = sender.get()
         self.updateFiltersPreview()
 
     def saturationCallback(self, sender):
-        self.presets[self.currentPreset]["saturation"] = sender.get()
+        self.currentPreset.saturation = sender.get()
         self.updateFiltersPreview()
 
     def sharpnessCallback(self, sender):
-        self.presets[self.currentPreset]["sharpness"] = sender.get()
+        self.currentPreset.sharpness = sender.get()
         self.updateFiltersPreview()
 
-    def redCallback(self, sender):
-        self.presets[self.currentPreset]["red"] = sender.get()
+    def useFalseColorCallback(self, sender):
+        self.w.getItem("color").enable(sender.get())
+        if sender.get():
+            self.colorCallback(self.w.getItem("color"))
+        else:
+            self.currentPreset.color = None
         self.updateFiltersPreview()
 
-    def greenCallback(self, sender):
-        self.presets[self.currentPreset]["green"] = sender.get()
+    def colorCallback(self, sender):
+        self.currentPreset.color = RGBAColor(*sender.get()).denormalized()
         self.updateFiltersPreview()
-    
-    def blueCallback(self, sender):
-        self.presets[self.currentPreset]["blue"] = sender.get()
-        self.updateFiltersPreview()
-
-    def alphaCallback(self, sender):
-        self.presets[self.currentPreset]["alpha"] = sender.get()
-        self.updateFiltersPreview()
-
-    def enableColorCallback(self, sender):
-        self.presets[self.currentPreset]["enableColor"] = sender.get()
-        for key in ["red", "green", "blue", "alpha"]:
-            self.w.getItem(key).enable(sender.get())
-        self.forceUpdatePresetData()
 
     def showOriginalCallback(self, sender):
         self.showOriginal = sender.get()
         self.updateFiltersPreview()
 
-    def forceUpdatePresetData(self):
-        for key in self.defaults.keys():
-            self.presets[self.currentPreset][key] = self.w.getItem(key).get()
-        self.updateFiltersPreview()
-
     def setUIFieldsState(self, state):
-        for key in self.defaults.keys():
+        for key in self.filterDefaults.keys():
             self.w.getItem(key).enable(state)
+        self.w.getItem("useFalseColor").enable(state)
         self.w.getItem("showOriginal").enable(state)
         self.w.getItem("presetName").enable(state)
 
     def forceUpdateUIFields(self):
         if self.currentPreset is None:
-            self.setUIFieldsState(False)
-            self.w.getItem("presetName").set("")
+            preset = ImagePreset(name="")
+            currentPresetIsNone = True
         else:
-            for key in self.defaults.keys():
-                self.w.getItem(key).set(self.presets[self.currentPreset][key])
-            self.w.getItem("presetName").set(self.currentPreset)
+            preset = self.currentPreset
+            currentPresetIsNone = False
+        for key in self.filterDefaults.keys():
+            if key == "color":
+                self.w.getItem(key).set(
+                    tuple(preset.color.normalized())
+                    if preset.color is not None
+                    else self.defaultColor
+                )
+            else:
+                self.w.getItem(key).set(getattr(preset, key))
+        if preset.color is not None:
+            self.w.getItem("useFalseColor").set(True)
+        self.w.getItem("presetName").set(preset.name)
+        if currentPresetIsNone:
+            self.setUIFieldsState(False)
+        else:
             self.setUIFieldsState(True)
-            self.enableColorCallback(self.w.getItem("enableColor"))
+            self.useFalseColorCallback(self.w.getItem("useFalseColor"))
 
     def presetsListAddRemoveButtonAddCallback(self, sender):
         table = self.w.getItem("presetsList")
         name = "New Preset"
         baseName = name
         counter = 1
-        while name in self.presets:
+        while name in (p.name for p in ImagePresetsManager.presets):
             name = f"{baseName} {counter}"
             counter += 1
-        item = dict(presetName=name)
-        table.appendItems([item])
-        self.presets[name] = self.defaults.copy()
-        table.setSelectedIndexes([len(self.presets.keys()) - 1,])
-        self.savePresets()
+        table.appendItems([dict(presetName=name)])
+        newPreset = ImagePreset(name=name, saveToDefaults=True)
+        table.setSelectedIndexes([len(ImagePresetsManager.presets) - 1,])
 
     def presetsListAddRemoveButtonRemoveCallback(self, sender):
         table = self.w.getItem("presetsList")
@@ -290,13 +250,13 @@ class ImagePresetsController(ezui.WindowController):
             return
         else:
             index = selectedIndex[0]
-        self.presets.pop(self.currentPreset)
+        ImagePresetsManager.removePresetByName(self.currentPreset.name)
+        presets = ImagePresetsManager.presets
         table.removeSelectedItems()
-        if self.presets:
-            table.setSelectedIndexes([index,] if index < len(self.presets.keys()) else [index - 1,])
+        if presets:
+            table.setSelectedIndexes([index,] if index < len(presets) else [index - 1,])
         else:
             self.currentPreset = None
-        self.savePresets()
         self.forceUpdateUIFields()
 
     def presetsListSelectionCallback(self, sender):
@@ -305,28 +265,26 @@ class ImagePresetsController(ezui.WindowController):
         if not sender.getSelectedItems():
             self.currentPreset = None
         else:
-            self.currentPreset = sender.getSelectedItems()[0]["presetName"]
+            self.currentPreset = ImagePresetsManager.getPresetByName(
+                sender.getSelectedItems()[0]["presetName"]
+            )
         self.forceUpdateUIFields()
-        self.updateFiltersPreview(savePresets=False)
+        self.updateFiltersPreview()
 
     def presetNameCallback(self, sender):
         newName = sender.get()
-        if newName in self.presets and newName != self.currentPreset:
+        if ImagePresetsManager.hasPresetName(newName) and newName != self.currentPreset.name:
             self.showMessage(
                 messageText="This name is already used by another preset",
                 alertStyle="informational",
                 icon=self.extensionBundle.get("icon"),
             )
-            sender.set(self.currentPreset)
+            sender.set(self.currentPreset.name)
             return
+        self.currentPreset.name = newName
         table = self.w.getItem("presetsList")
         index = table.getSelectedIndexes()[0]
-        previousName = self.currentPreset
-        self.currentPreset = newName
-        settings = self.presets.pop(previousName)
-        self.presets[self.currentPreset] = settings
-        table.setItem(index, dict(presetName=self.currentPreset))
+        table.setItem(index, dict(presetName=newName))
         table.setSelectedIndexes([index,])
-        self.savePresets()
 
 ImagePresetsController()
