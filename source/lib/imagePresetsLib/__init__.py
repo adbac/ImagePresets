@@ -1,6 +1,7 @@
-from typing import Iterable, Self
+from typing import Iterable
 
 import AppKit
+import install  # to register custom subscriber events
 from mojo.events import postEvent
 from mojo.extensions import (ExtensionBundle, getExtensionDefault,
                              setExtensionDefault)
@@ -488,6 +489,7 @@ class ImagePreset:
         image.saturation = self._convertUserValueToFilterValue("saturation")
         image.sharpness = self._convertUserValueToFilterValue("sharpness")
         image.performUndo()
+        image.changed()
 
     def _saveDefaultsIfAddedToManager(self):
         if self._addedToManager:
