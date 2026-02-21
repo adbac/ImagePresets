@@ -3,11 +3,9 @@ from typing import Iterable
 import AppKit
 import install  # to register custom subscriber events
 from mojo.events import postEvent
-from mojo.extensions import (ExtensionBundle, getExtensionDefault,
-                             setExtensionDefault)
+from mojo.extensions import ExtensionBundle, getExtensionDefault, setExtensionDefault
 from mojo.tools import CallbackWrapper
 from Quartz import CIFilter
-
 
 _LIB_KEY = lambda s: f"com.adbac.ImagePresets.{s}"
 
@@ -112,7 +110,7 @@ class RGBAColor:
         normalizedColor = self.normalized()
         for attr in self._attrs:
             setattr(self, attr, getattr(normalizedColor, attr))
-    
+
     def denormalized(self):
         color = self.copy()
         for attr in self._attrs:
@@ -244,7 +242,8 @@ class ImagePreset:
 
     def __repr__(self):
         return (
-            self.__class__.__name__ + "(\n    "
+            self.__class__.__name__
+            + "(\n    "
             + ",\n    ".join(f"{attr}={getattr(self, attr)!r}" for attr in self._attrs)
             + "\n)"
         )
@@ -264,9 +263,9 @@ class ImagePreset:
         if value is None:
             setattr(self, attr, r.default)
         else:
-            assert (
-                r.min <= value <= r.max
-            ), f"{name.capitalize()} value must be comprised between {r.min} and {r.max}"
+            assert r.min <= value <= r.max, (
+                f"{name.capitalize()} value must be comprised between {r.min} and {r.max}"
+            )
             setattr(self, attr, value)
         self._saveDefaultsIfAddedToManager()
         if not self._holdEvents:
@@ -340,13 +339,15 @@ class ImagePreset:
         if isinstance(value, RGBAColor) or value is None:
             self._color = value
         else:
-            assert (
-                isinstance(value, Iterable) and len(value) == 4
-            ), "Color must be an RGBA iterable"
+            assert isinstance(value, Iterable) and len(value) == 4, (
+                "Color must be an RGBA iterable"
+            )
             assert (
                 all(rgbRange.min <= v <= rgbRange.max for v in value[:3])
                 and alphaRange.min <= value[3] <= alphaRange.max
-            ), f"RGB values must be comprised between {rgbRange.min} and {rgbRange.max}, and alpha value between {alphaRange.min} and {alphaRange.max}"
+            ), (
+                f"RGB values must be comprised between {rgbRange.min} and {rgbRange.max}, and alpha value between {alphaRange.min} and {alphaRange.max}"
+            )
             self._color = RGBAColor(*value)
         self._saveDefaultsIfAddedToManager()
         if not self._holdEvents:
@@ -457,12 +458,14 @@ class ImagePreset:
             ),
         ]
         if self.color is not None:
-            filters.append(dict(
-                name="falseColor",
-                filterType="falseColor",
-                color0=self._convertUserValueToFilterValue("color"),
-                color1=(1, 1, 1, 1),
-            ))
+            filters.append(
+                dict(
+                    name="falseColor",
+                    filterType="falseColor",
+                    color0=self._convertUserValueToFilterValue("color"),
+                    color1=(1, 1, 1, 1),
+                )
+            )
         return filters
 
     def applyToMerzLayer(self, layer, overwriteFilters=False):
@@ -559,7 +562,8 @@ class ImagePreset:
                 "inputImage",
             )
             falseColorFilter.setValue_forKey_(
-                AppKit.CIColor.colorWithRed_green_blue_alpha_(*self.color.normalized()), "inputColor0"
+                AppKit.CIColor.colorWithRed_green_blue_alpha_(*self.color.normalized()),
+                "inputColor0",
             )
             falseColorFilter.setValue_forKey_(
                 AppKit.CIColor.colorWithRed_green_blue_alpha_(1, 1, 1, 1), "inputColor1"
@@ -636,7 +640,9 @@ class ImagePresetsManager:
 
     @classmethod
     def addPreset(cls, preset: ImagePreset):
-        assert preset.name not in [p.name for p in cls.presets], f"{preset.name!r} is a name already used by another preset"
+        assert preset.name not in [p.name for p in cls.presets], (
+            f"{preset.name!r} is a name already used by another preset"
+        )
         postEvent("imagePresetsManagerWillAddPreset", preset=preset)
         cls.presets.append(preset)
         preset._addedToManager = True
@@ -662,7 +668,9 @@ class ImagePresetsManager:
     def reloadPresets(cls):
         presets = [
             ImagePreset.fromDict(dict(**data, name=name))
-            for name, data in getExtensionDefault(_LIB_KEY("presets"), fallback={}).items()
+            for name, data in getExtensionDefault(
+                _LIB_KEY("presets"), fallback={}
+            ).items()
         ]
         for p in presets:
             p._addedToManager = True
@@ -690,11 +698,13 @@ class ImagePresetsManager:
     @classmethod
     def makeMenuItems(cls, includeNone=True, callback=None):
         if includeNone:
-            firstItem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("None", "", "")
+            firstItem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+                "None", "", ""
+            )
             firstItem.setRepresentedObject_(None)
             items = [firstItem]
         else:
-            items  =[]
+            items = []
         for preset in cls.presets:
             items.append(preset.makeMenuItem(callback))
         return items
