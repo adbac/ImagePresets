@@ -1,11 +1,11 @@
-<img src="docs/images/icon.png" alt="extension icon" width="75px"/>
+<img src="source/resources/icon.png" alt="extension icon" width="75px"/>
 
 Image Presets
 ==========
 
 A RoboFont extension that provides an interface for creating image presets, and menus in the glyph editor to apply them.
 
-![](docs/images/imagePresetsWindow.png)
+![](source/resources/image-presets-window.png)
 
 _Placeholder image credit: Boston Public Library via Unsplash_
 
@@ -26,8 +26,8 @@ Usage
 - Apply the preset > by right-clicking on the image if it is not locked, or right-clicking anywhere in the glyph view > select _Apply Image Preset_ then select your preset's name in the submenu
 
 <div style="display:flex; flex-direction:row; justify-content: center;">
-    <img src="docs/images/glyphEditorImageMenu.png" alt="" style="height: 500px; margin-right: 12px;"/>
-    <img src="docs/images/glyphEditorMenu.png" alt="" style="height: 500px;"/>
+    <img src="source/resources/glyph-editor-image-menu.png" alt="" style="height: 500px; margin-right: 12px;"/>
+    <img src="source/resources/glyph-editor-menu.png" alt="" style="height: 500px;"/>
 </div>
 
 Available settings
