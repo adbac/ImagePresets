@@ -1,7 +1,9 @@
 from mojo.subscriber import registerSubscriberEvent
 
 
-libKey = lambda s: f"com.adbac.ImagePresets.{s}"
+def libKey(s):
+    return "com.adbac.ImagePresets" + (f".{s}" if s else "")
+
 
 # Subscriber events
 
@@ -10,8 +12,9 @@ imagePresetsManagerEvents = [
     "imagePresetsManagerDidAddPreset",
     "imagePresetsManagerWillRemovePreset",
     "imagePresetsManagerDidRemovePreset",
-    "imagePresetsManagerDidChangePreset",
+    "imagePresetsManagerPresetChanged",
 ]
+
 
 def imagePresetsManagerEventExtractor(subscriber, info):
     attributes = ["old", "new", "preset"]
@@ -19,6 +22,7 @@ def imagePresetsManagerEventExtractor(subscriber, info):
         data = info["lowLevelEvents"][-1]
         if attribute in data:
             info[attribute] = data[attribute]
+
 
 for event in imagePresetsManagerEvents:
     documentation = (

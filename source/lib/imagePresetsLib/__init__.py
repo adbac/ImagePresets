@@ -270,7 +270,7 @@ class ImagePreset:
         self._saveDefaultsIfAddedToManager()
         if not self._holdEvents:
             postEvent(
-                "imagePresetsManagerDidChangePreset",
+                "imagePresetsManagerPresetChanged",
                 old=oldDict,
                 new=self.asDict(),
                 preset=self,
@@ -288,7 +288,7 @@ class ImagePreset:
         self._saveDefaultsIfAddedToManager()
         if not self._holdEvents:
             postEvent(
-                "imagePresetsManagerDidChangePreset",
+                "imagePresetsManagerPresetChanged",
                 old=oldDict,
                 new=self.asDict(),
                 preset=self,
@@ -352,7 +352,7 @@ class ImagePreset:
         self._saveDefaultsIfAddedToManager()
         if not self._holdEvents:
             postEvent(
-                "imagePresetsManagerDidChangePreset",
+                "imagePresetsManagerPresetChanged",
                 old=oldDict,
                 new=self.asDict(),
                 preset=self,
